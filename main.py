@@ -97,6 +97,8 @@ def std_login():
         username = username_entry.get().strip()
         password = password_entry.get().strip()
 
+        
+
         if not username or not password:
             message_box("Please enter both username and password")
             return
@@ -136,6 +138,7 @@ def std_login():
 
     username_label = tk.Label(student_login, text="Username", bg=bg_color, fg='white', font=('Times New Roman', 16))
     username_label.place(x=50, y=80)
+    
     username_entry = tk.Entry(student_login)
     username_entry.place(x=160, y=80, width=180)
 
@@ -1880,16 +1883,16 @@ def student_window():
     heading_std = tk.Label(student_role, text="Student Window", fg=bg_color, font=('Brush Script MT', 25))
     heading_std.place(x=0, y=0, width=400)
 
-    profile_btn = tk.Button(student_role, text="Update Profile", font=('Helvetica', 16), fg="red", bg=bg_color, command=modify_student_details)
+    profile_btn = tk.Button(student_role, text="Update Profile", font=('Helvetica', 16), fg="red", bg=bg_color, command=student_details)
     profile_btn.place(x=10, y=80, width=180, height=50)
 
-    view_profile_btn = tk.Button(student_role, text="View Profile", font=('Helvetica', 16), fg="red", bg=bg_color, command=view_student_details)
+    view_profile_btn = tk.Button(student_role, text="View Profile", font=('Helvetica', 16), fg="red", bg=bg_color, command=view_student_data)
     view_profile_btn.place(x=10, y=180, width=180, height=55)
 
-    view_ECA_btn = tk.Button(student_role, text="View ECA", font=('Helvetica', 16), fg="red", bg=bg_color, command=student_Eca)
+    view_ECA_btn = tk.Button(student_role, text="View ECA", font=('Helvetica', 16), fg="red", bg=bg_color, command=view_student_Eca)
     view_ECA_btn.place(x=10, y=280, width=180, height=55)
 
-    view_Grades_btn = tk.Button(student_role, text="View Grades", font=('Helvetica', 16), fg="red", bg=bg_color, command=view_grades)
+    view_Grades_btn = tk.Button(student_role, text="View Grades", font=('Helvetica', 16), fg="red", bg=bg_color, command=view_student_grades)
     view_Grades_btn.place(x=210, y=80, width=180, height=50)
 
 
@@ -1905,81 +1908,62 @@ def student_window():
 ###############################################################################################################################
 ###############################################################################################################################
 
-def modify_student_details():
+def student_details():
     global current_frame
     clear_frame()
 
-    def get_student_list():
-        students = []
-        if os.path.exists("users.txt"):
-            with open("users.txt", "r") as file:
-                lines = file.readlines()
-                i = 0
-                while i < len(lines):
-                    if lines[i].strip().startswith("Role: Student"):
-                        for j in range(i+1, i+5):
-                            if j < len(lines) and (
-                                lines[j].strip().startswith("Name:") or lines[j].strip().startswith("Student:")
-                            ):
-                                name = lines[j].split(":", 1)[1].strip()
-                                students.append(name)
-                                break
-                    i += 1
-        return students
-
     def load_details():
-        student_name = select_student.get()
+        student_name = username_entry.get().strip()
         if not student_name:
-            message_box("Please select a student")
+            message_box("Please enter your name")
             return
-
-        for entry in detail_entries.values():
-            entry.delete(0, tk.END)
 
         if not os.path.exists("users.txt"):
             message_box("No users file found")
             return
 
+        # Clear fields
+        for entry in detail_entries.values():
+            entry.delete(0, tk.END)
+
         found = False
         with open("users.txt", "r") as file:
             lines = file.readlines()
-            i = 0
-            while i < len(lines):
-                if lines[i].strip().startswith("Role: Student"):
-                    block_start = i
-                    block_data = {}
-                    j = i
-                    while j < len(lines) and lines[j].strip() != "-----------------------------------------":
-                        line = lines[j].strip()
-                        if ":" in line:
-                            key, value = line.split(":", 1)
-                            block_data[key.strip()] = value.strip()
-                        j += 1
 
-                    if block_data.get("Name") == student_name or block_data.get("Student") == student_name:
-                        found = True
-                        for key in detail_entries:
-                            if key in block_data:
-                                detail_entries[key].insert(0, block_data[key])
-                        break
-                    i = j
-                i += 1
+        i = 0
+        while i < len(lines):
+            if lines[i].strip().startswith("Role: Student"):
+                block_start = i
+                block_data = {}
+                j = i
+                while j < len(lines) and not lines[j].strip().startswith("-----------------------------------------"):
+                    line = lines[j].strip()
+                    if ":" in line:
+                        key, value = line.split(":", 1)
+                        block_data[key.strip()] = value.strip()
+                    j += 1
+
+                if block_data.get("Name") == student_name or block_data.get("Student") == student_name:
+                    found = True
+                    for key in detail_entries:
+                        if key in block_data:
+                            detail_entries[key].insert(0, block_data[key])
+                    break
+                i = j
+            i += 1
 
         if not found:
             message_box(f"No details found for {student_name}")
 
-    def modify_details():
-        student_name = select_student.get()
+    def save_details():
+        student_name = username_entry.get().strip()
         if not student_name:
-            message_box("Please select a student")
+            message_box("Please enter your name")
             return
 
         new_data = {}
         for key, entry in detail_entries.items():
             new_data[key] = entry.get().strip()
-
-        if "Role" not in new_data or new_data["Role"] != "Student":
-            new_data["Role"] = "Student"
 
         new_lines = []
         found = False
@@ -1987,78 +1971,66 @@ def modify_student_details():
         if os.path.exists("users.txt"):
             with open("users.txt", "r") as file:
                 lines = file.readlines()
-                i = 0
-                while i < len(lines):
-                    if lines[i].strip().startswith("Role: Student"):
-                        block_start = i
-                        block_lines = []
-                        j = i
-                        while j < len(lines) and lines[j].strip() != "-----------------------------------------":
-                            block_lines.append(lines[j].strip())
-                            j += 1
 
-                        match = False
-                        for line in block_lines:
-                            if (
-                                line == f"Name: {student_name}" or line == f"Student: {student_name}"
-                            ):
-                                match = True
-                                break
+            i = 0
+            while i < len(lines):
+                if lines[i].strip().startswith("Role: Student"):
+                    block_start = i
+                    block_lines = []
+                    j = i
+                    while j < len(lines) and not lines[j].strip().startswith("-----------------------------------------"):
+                        block_lines.append(lines[j].strip())
+                        j += 1
 
-                        if match:
-                            found = True
-                            
-                            while i < len(lines) and lines[i].strip() != "-----------------------------------------":
-                                i += 1
-                            i += 1  
+                    # Check if name matches
+                    match = False
+                    for line in block_lines:
+                        if (
+                            line == f"Name: {student_name}" or line == f"Student: {student_name}"
+                        ):
+                            match = True
+                            break
 
-                            
-                            new_lines.append("Role: Student\n")
-                            for key in detail_entries:
-                                new_lines.append(f"{key}: {new_data[key]}\n")
-                            new_lines.append("-----------------------------------------\n")
-                        else:
-                            for line in block_lines:
-                                new_lines.append(line + "\n")
-                            new_lines.append("-----------------------------------------\n")
-                            i = j + 1
+                    if match:
+                        found = True
+                        # Skip old block
+                        while i < len(lines) and not lines[i].strip().startswith("-----------------------------------------"):
+                            i += 1
+                        i += 1  # Skip separator
+
+                        # Write updated block
+                        new_lines.append("Role: Student\n")
+                        for key in detail_entries:
+                            new_lines.append(f"{key}: {new_data[key]}\n")
+                        new_lines.append("-----------------------------------------\n")
                     else:
-                        if lines[i].strip() != "-----------------------------------------":
-                            new_lines.append(lines[i])
-                        i += 1
-
-        if not found:
-            new_lines.append("Role: Student\n")
-            for key in detail_entries:
-                new_lines.append(f"{key}: {new_data[key]}\n")
-            new_lines.append("-----------------------------------------\n")
-
-        with open("users.txt", "w") as file:
-            file.writelines(new_lines)
-
-        message_box(f"Details updated for {student_name}!")
-
-
+                        for line in block_lines:
+                            new_lines.append(line + "\n")
+                        new_lines.append("-----------------------------------------\n")
+                        i = j + 1
+                else:
+                    if not lines[i].strip().startswith("-----------------------------------------"):
+                        new_lines.append(lines[i])
+                    i += 1
 
         if found:
             with open("users.txt", "w") as file:
                 file.writelines(new_lines)
-            for entry in detail_entries.values():
-                entry.delete(0, tk.END)
-            message_box(f"Details for {student_name} deleted!")
+            message_box(f"Details updated for {student_name}!")
         else:
-            message_box(f"No details found for {student_name}")
+            message_box(f"No matching details found for {student_name}")
 
-    # Build frame
+    # Frame UI
     modify_frame = tk.Frame(root, highlightbackground="red", highlightthickness=3, bg=bg_color)
     current_frame = modify_frame
 
-    heading = tk.Label(modify_frame, text="Modify/Delete Student Details", fg=bg_color, font=('Brush Script MT', 25))
+    heading = tk.Label(modify_frame, text="Modify Your Details", fg=bg_color, font=('Brush Script MT', 25))
     heading.pack(pady=10)
 
-    tk.Label(modify_frame, text="Select Student", bg=bg_color, fg='white').pack()
-    select_student = Combobox(modify_frame, state="readonly", values=get_student_list())
-    select_student.pack()
+    username_label = tk.Label(modify_frame, text="Enter Your Name:", bg=bg_color, fg='white', font=('Times New Roman', 14))
+    username_label.pack()
+    username_entry = tk.Entry(modify_frame)
+    username_entry.pack(pady=5)
 
     load_btn = tk.Button(modify_frame, text="Load Details", command=load_details)
     load_btn.pack(pady=5)
@@ -2071,50 +2043,31 @@ def modify_student_details():
         entry.pack()
         detail_entries[field] = entry
 
-    modify_btn = tk.Button(modify_frame, text="Modify Details", command=modify_details)
-    modify_btn.pack(pady=5)
+    save_btn = tk.Button(modify_frame, text="Save Changes", command=save_details)
+    save_btn.pack(pady=10)
 
-    back_btn = tk.Button(modify_frame, text="Back", command=student_window)  # adjust as needed
-    back_btn.pack(pady=10)
+    back_btn = tk.Button(modify_frame, text="Back", command=student_window)
+    back_btn.pack(pady=5)
 
     modify_frame.pack(pady=30)
     modify_frame.pack_propagate(False)
-    modify_frame.configure(width=400, height=550)
+    modify_frame.configure(width=400, height=600)
 
 ##########################################################################################################################
 ##########################################################################################################################
 
-def view_student_details():
+def view_student_data():
     global current_frame
     clear_frame()
 
-    
-
-    def get_student_list():
-        students = []
-        if os.path.exists("users.txt"):
-            with open("users.txt", "r") as file:
-                lines = file.readlines()
-                i = 0
-                while i < len(lines):
-                    if lines[i].strip().startswith("Role: Student"):
-                        for j in range(i+1, i+5):
-                            if j < len(lines) and (
-                                lines[j].strip().startswith("Name:") or lines[j].strip().startswith("Student:")
-                            ):
-                                name = lines[j].split(":", 1)[1].strip()
-                                students.append(name)
-                                break
-                    i += 1
-        return students
-
     def load_details():
-        student_name = select_student.get()
+        student_name = username_entry.get().strip()
         if not student_name:
-            message_box("Please select a student")
+            message_box("Please enter your name")
             return
 
         for entry in detail_entries.values():
+            entry.config(state='normal')
             entry.delete(0, tk.END)
 
         if not os.path.exists("users.txt"):
@@ -2127,7 +2080,6 @@ def view_student_details():
             i = 0
             while i < len(lines):
                 if lines[i].strip().startswith("Role: Student"):
-                    block_start = i
                     block_data = {}
                     j = i
                     while j < len(lines) and lines[j].strip() != "-----------------------------------------":
@@ -2137,7 +2089,7 @@ def view_student_details():
                             block_data[key.strip()] = value.strip()
                         j += 1
 
-                    if block_data.get("Name") == student_name or block_data.get("Student") == student_name:
+                    if block_data.get("Name") == student_name:
                         found = True
                         for key in detail_entries:
                             if key in block_data:
@@ -2146,75 +2098,62 @@ def view_student_details():
                     i = j
                 i += 1
 
-        if not found:
+        if found:
+            # Make entries read-only
+            for entry in detail_entries.values():
+                entry.config(state='readonly')
+        else:
             message_box(f"No details found for {student_name}")
 
-    
+    # Frame setup
+    view_frame = tk.Frame(root, highlightbackground="red", highlightthickness=3, bg=bg_color)
+    current_frame = view_frame
 
-
-    # Build frame
-    modify_frame = tk.Frame(root, highlightbackground="red", highlightthickness=3, bg=bg_color)
-    current_frame = modify_frame
-
-    heading = tk.Label(modify_frame, text="Modify/Delete Student Details", fg=bg_color, font=('Brush Script MT', 25))
+    heading = tk.Label(view_frame, text="View Your Details", fg=bg_color, font=('Brush Script MT', 25))
     heading.pack(pady=10)
 
-    tk.Label(modify_frame, text="Select Student", bg=bg_color, fg='white').pack()
-    select_student = Combobox(modify_frame, state="readonly", values=get_student_list())
-    select_student.pack()
+    username_label = tk.Label(view_frame, text="Enter Your Name:", bg=bg_color, fg='white', font=('Times New Roman', 14))
+    username_label.pack()
+    username_entry = tk.Entry(view_frame)
+    username_entry.pack(pady=5)
 
-    load_btn = tk.Button(modify_frame, text="Load Details", command=load_details)
+    load_btn = tk.Button(view_frame, text="Load Details", command=load_details)
     load_btn.pack(pady=5)
 
     detail_entries = {}
     fields = ["Name", "Age", "Email", "Contact"]
     for field in fields:
-        tk.Label(modify_frame, text=field, bg=bg_color, fg='white').pack()
-        entry = tk.Entry(modify_frame)
+        tk.Label(view_frame, text=field, bg=bg_color, fg='white').pack()
+        entry = tk.Entry(view_frame)
         entry.pack()
         detail_entries[field] = entry
-    
 
-
-    back_btn = tk.Button(modify_frame, text="Back", command=student_window)  # adjust as needed
+    back_btn = tk.Button(view_frame, text="Back", command=student_window)  # adjust as needed
     back_btn.pack(pady=10)
 
-    modify_frame.pack(pady=30)
-    modify_frame.pack_propagate(False)
-    modify_frame.configure(width=400, height=550)
+    view_frame.pack(pady=30)
+    view_frame.pack_propagate(False)
+    view_frame.configure(width=400, height=550)
+
    ################################################################################################################
    ################################################################################################################ 
 
 
-def view_grades():
+def view_student_grades():
     global current_frame
     clear_frame()
 
-    def get_student_list():
-        students = []
-        if os.path.exists("users.txt"):
-            with open("users.txt", "r") as file:
-                lines = file.readlines()
-                i = 0
-                while i < len(lines):
-                    if lines[i].strip().startswith("Role: Student"):
-                        for j in range(i+1, i+5):
-                            if j < len(lines) and lines[j].strip().startswith("Name:"):
-                                name = lines[j].split(":", 1)[1].strip()
-                                students.append(name)
-                                break
-                    i += 1
-        return students
-
     def load_grades():
-        student_name = select_student.get()
+        student_name = username_entry.get().strip()
         if not student_name:
-            message_box("Please select a student")
+            message_box("Please enter your name")
             return
 
         # Reset entries
         for entry in subject_entries.values():
+            entry.config(state='normal')
             entry.delete(0, tk.END)
+            entry.config(state='readonly')
 
         if not os.path.exists("grades.txt"):
             message_box("No grades file found")
@@ -2232,62 +2171,54 @@ def view_grades():
                         for subject in subject_entries:
                             if lines[i].startswith(f"{subject}:"):
                                 mark = lines[i].split(":", 1)[1].strip()
-                                subject_entries[subject].insert(0, mark)
+                                entry = subject_entries[subject]
+                                entry.config(state='normal')
+                                entry.insert(0, mark)
+                                entry.config(state='readonly')
                         i += 1
                     break
                 i += 1
         if not found:
-            message_box(f"No grades found of {student_name}")
+            message_box(f"No grades found for {student_name}")
 
     # Build frame
-    modify_frame = tk.Frame(root, highlightbackground="red", highlightthickness=3, bg=bg_color)
-    current_frame = modify_frame
+    view_frame = tk.Frame(root, highlightbackground="red", highlightthickness=3, bg=bg_color)
+    current_frame = view_frame
 
-    heading = tk.Label(modify_frame, text="Modify/Delete Grades", fg=bg_color, font=('Brush Script MT', 25))
+    heading = tk.Label(view_frame, text="View My Grades", fg=bg_color, font=('Brush Script MT', 25))
     heading.pack(pady=10)
 
-    tk.Label(modify_frame, text="Select Student", bg=bg_color, fg='white').pack()
-    select_student = Combobox(modify_frame, state="readonly", values=get_student_list())
-    select_student.pack()
+    username_label = tk.Label(view_frame, text="Enter Your Name:", bg=bg_color, fg='white', font=('Times New Roman', 14))
+    username_label.pack()
+    username_entry = tk.Entry(view_frame)
+    username_entry.pack(pady=5)
 
-    load_btn = tk.Button(modify_frame, text="Load Grades", command=load_grades)
+    load_btn = tk.Button(view_frame, text="Load Grades", command=load_grades)
     load_btn.pack(pady=5)
 
     subject_entries = {}
     for subject in ["IT", "FODS", "FOM", "AEC"]:
-        tk.Label(modify_frame, text=subject, bg=bg_color, fg='white').pack()
-        entry = tk.Entry(modify_frame)
+        tk.Label(view_frame, text=subject, bg=bg_color, fg='white').pack()
+        entry = tk.Entry(view_frame, state="readonly")
         entry.pack()
         subject_entries[subject] = entry
 
-    back_btn = tk.Button(modify_frame, text="Back", command=student_window)  # adjust if needed
+    back_btn = tk.Button(view_frame, text="Back", command=student_window)
     back_btn.pack(pady=10)
 
-    modify_frame.pack(pady=30)
-    modify_frame.pack_propagate(False)
-    modify_frame.configure(width=400, height=550)
+    view_frame.pack(pady=30)
+    view_frame.pack_propagate(False)
+    view_frame.configure(width=400, height=550)
 
 
-def student_Eca():
+def view_student_Eca():
     global current_frame
     clear_frame()
 
-    def get_student_list():
-        students = []
-        if os.path.exists("grades.txt"):
-            with open("grades.txt", "r") as file:
-                lines = file.readlines()
-                for line in lines:
-                    if line.strip().startswith("Name:"):
-                        name = line.split(":", 1)[1].strip()
-                        if name not in students:
-                            students.append(name)
-        return students
-
     def show_insights():
-        student_name = select_student.get()
+        student_name = username_entry.get().strip()
         if not student_name:
-            message_box("Please select a student")
+            message_box("Please enter your name")
             return
 
         subjects = []
@@ -2378,9 +2309,10 @@ def student_Eca():
     heading = tk.Label(insights_frame, text="Student Insights", fg=bg_color, font=('Brush Script MT', 25))
     heading.pack(pady=10)
 
-    tk.Label(insights_frame, text="Select Student:", bg=bg_color, fg='white').pack()
-    select_student = Combobox(insights_frame, state="readonly", values=get_student_list())
-    select_student.pack(pady=5)
+    username_label = tk.Label(insights_frame, text="Enter Your Name:", bg=bg_color, fg='white', font=('Times New Roman', 14))
+    username_label.pack()
+    username_entry = tk.Entry(insights_frame)
+    username_entry.pack(pady=5)
 
     load_btn = tk.Button(insights_frame, text="Show Insights", command=show_insights)
     load_btn.pack(pady=5)
@@ -2397,6 +2329,7 @@ def student_Eca():
     insights_frame.pack(pady=30)
     insights_frame.pack_propagate(False)
     insights_frame.configure(width=500, height=600)
+
 
 
 
