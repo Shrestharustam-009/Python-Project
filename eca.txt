@@ -1,0 +1,9 @@
+Name: Rustam
+Activities:
+- Sports
+- Music
+- Debate
+- Drama
+- Art
+- Science Club
+-----------------------------------------

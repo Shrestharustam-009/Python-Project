@@ -1,0 +1,11 @@
+Role: Admin
+Name: Yogesh
+Age: 20
+Email:
+Contact: 9876567890
+Role: Student
+Name: Rustam
+Age: 20
+Email: 
+Contact: 9704606580
+-----------------------------------------
