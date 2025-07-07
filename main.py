@@ -1863,7 +1863,7 @@ def student_insights():
 
     insights_frame.pack(pady=30)
     insights_frame.pack_propagate(False)
-    insights_frame.configure(width=500, height=600)
+    insights_frame.configure(width=800, height=600)
 ######################################################################################################################
 ######################################################################################################################
 #######################################################################################################################
@@ -2328,7 +2328,7 @@ def view_student_Eca():
 
     insights_frame.pack(pady=30)
     insights_frame.pack_propagate(False)
-    insights_frame.configure(width=500, height=600)
+    insights_frame.configure(width=800, height=600)
 
 
 
