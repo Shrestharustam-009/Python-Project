@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from abc import ABC, abstractmethod
 
-
+# Abstract Class
 class StudentManagementSystem(ABC):
     @abstractmethod
     def admin_log():
